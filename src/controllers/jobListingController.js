@@ -6,7 +6,7 @@ const axios = require('axios');
 
 const matchJobListing = async (req, res) => {
     try {
-      const { title, location, description } = req.body;
+      const { title, location, description, limit = 10 } = req.body;
   
       if (!description) {
         return res.status(400).json({ message: 'Job description is required.' });
@@ -33,37 +33,37 @@ const matchJobListing = async (req, res) => {
   
       // Prepare prompt for LLM grading
       const gradingPrompt = `
-  You are an expert AI recruiter. Your task is to evaluate and rank candidates based on the given job description. Here are the detailed instructions:
-  
-  1. Carefully review the job description and requirements.
-  2. Evaluate each candidate based on how well they match the job description. Consider the following factors:
-     - Relevance of their skills to the required skills
-     - Years and quality of experience
-     - Overall suitability based on their summary
-  3. Assign a score from 0 to 100 for each candidate, where 100 is a perfect match and 0 is completely irrelevant.
-  4. Rank the candidates based on their scores.
-  5. Provide a brief explanation (1-2 sentences) for each candidate's score.
-  6. Return the top 10 candidates in JSON format.
-  
-  Job Description:
-  ${description}
-  
-  Candidate Information:
-  ${JSON.stringify(candidateData, null, 2)}
-  
-  Output Format:
-  [
-    {
-      "name": "Candidate Name",
-      "email": "candidate@example.com",
-      "score": 95,
-      "explanation": "Brief explanation of the score"
-    },
-    ...
-  ]
-  
-  Only return the JSON array, nothing else. If no candidates match the criteria, return an empty array.
-  `;
+        You are an expert AI recruiter. Your task is to evaluate and rank candidates based on the given job description. Here are the detailed instructions:
+        
+        1. Carefully review the job description and requirements.
+        2. Evaluate each candidate based on how well they match the job description. Consider the following factors:
+            - Relevance of their skills to the required skills
+            - Years and quality of experience
+            - Overall suitability based on their summary
+        3. Assign a score from 0 to 100 for each candidate, where 100 is a perfect match and 0 is completely irrelevant.
+        4. Rank the candidates based on their scores.
+        5. Provide a brief explanation (1-2 sentences) for each candidate's score.
+        6. Return the top ${limit} candidates in JSON format.
+        
+        Job Description:
+        ${description}
+        
+        Candidate Information:
+        ${JSON.stringify(candidateData, null, 2)}
+        
+        Output Format:
+        [
+            {
+            "name": "Candidate Name",
+            "email": "candidate@example.com",
+            "score": 95,
+            "explanation": "Brief explanation of the score"
+            },
+            ...
+        ]
+        
+        Only return the JSON array with the top ${limit} candidates, nothing else. If no candidates match the criteria, return an empty array.
+        `;
   
       const llmOutput = await getLLMResponse(gradingPrompt);
   
