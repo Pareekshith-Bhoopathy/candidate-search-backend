@@ -6,12 +6,16 @@ const searchRoutes = require('./routes/searchRoutes');
 const jobListingRoutes = require('./routes/jobListingRoutes');
 const config = require('./config/config');
 const logger = require('./utils/logger');
+const cors = require('cors');
+
 
 const app = express();
 
 // Middleware
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
 
 // Routes
 app.use('/api/candidates', candidateRoutes);
