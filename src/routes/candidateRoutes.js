@@ -1,6 +1,6 @@
 // src/routes/candidateRoutes.js
 const express = require('express');
-const { uploadCandidates } = require('../controllers/candidateController');
+const { uploadCandidates, getUploadStatus } = require('../controllers/candidateController');
 
 const router = express.Router();
 
@@ -10,5 +10,12 @@ const router = express.Router();
  * @access Public
  */
 router.post('/upload', uploadCandidates);
+
+/**
+ * @route GET /api/candidates/upload/:jobId
+ * @desc Get the status of an upload job
+ * @access Public
+ */
+router.get('/upload/:jobId', getUploadStatus);
 
 module.exports = router;

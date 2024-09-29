@@ -1,8 +1,15 @@
-// src/services/azureOpenAIService.js
 const axios = require('axios');
 const FormData = require('form-data');
 const config = require('../config/config');
 const logger = require('../utils/logger');
+
+const handleRateLimit = (error) => {
+  if (error.response && error.response.status === 429) {
+    const retryAfter = parseInt(error.response.headers['retry-after']) || 14;
+    return { isRateLimited: true, retryAfter };
+  }
+  return { isRateLimited: false, retryAfter: 0 };
+};
 
 const getEmbeddings = async (text) => {
   try {
@@ -16,10 +23,14 @@ const getEmbeddings = async (text) => {
         },
       }
     );
-    return response.data.data[0].embedding;
+    return { embedding: response.data.data[0].embedding, error: null };
   } catch (error) {
+    const { isRateLimited, retryAfter } = handleRateLimit(error);
+    if (isRateLimited) {
+      return { embedding: null, error: 'Rate limited', retryAfter };
+    }
     logger.error(`Azure OpenAI Embeddings Error: ${error.message}`);
-    throw new Error('Failed to get embeddings');
+    return { embedding: null, error: 'Failed to get embeddings' };
   }
 };
 
@@ -42,10 +53,14 @@ const getLLMResponse = async (prompt) => {
         },
       }
     );
-    return response.data.choices[0].message.content;
+    return { content: response.data.choices[0].message.content, error: null };
   } catch (error) {
+    const { isRateLimited, retryAfter } = handleRateLimit(error);
+    if (isRateLimited) {
+      return { content: null, error: 'Rate limited', retryAfter };
+    }
     logger.error(`Azure OpenAI LLM Error: ${error.message}`);
-    throw new Error('Failed to get LLM response');
+    return { content: null, error: 'Failed to get LLM response' };
   }
 };
 
